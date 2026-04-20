@@ -92,30 +92,38 @@ export default function App() {
     dispatch({ type: 'ADD_USER_MSG', content: text })
     dispatch({ type: 'EVENT', event: { type: 'SUBMIT' } })
 
-    // Dynamic import so this runs in renderer context only
-    const { getLLMAdapter } = await import('../../llm/index')
-    const adapter = await getLLMAdapter()
-    const newMessages: Message[] = [
-      ...state.messages,
-      { role: 'user', content: text },
-    ]
-
-    streamingRef.current = ''
     const gen = ++streamGenRef.current
-    let firstToken = true
 
-    for await (const token of adapter.stream(newMessages)) {
-      if (streamGenRef.current !== gen) break
-      if (firstToken) {
-        dispatch({ type: 'EVENT', event: { type: 'FIRST_TOKEN' } })
-        firstToken = false
+    try {
+      // Dynamic import so this runs in renderer context only
+      const { getLLMAdapter } = await import('../../llm/index')
+      const adapter = await getLLMAdapter()
+      const newMessages: Message[] = [
+        ...state.messages,
+        { role: 'user', content: text },
+      ]
+
+      streamingRef.current = ''
+      let firstToken = true
+
+      for await (const token of adapter.stream(newMessages)) {
+        if (streamGenRef.current !== gen) break
+        if (firstToken) {
+          dispatch({ type: 'EVENT', event: { type: 'FIRST_TOKEN' } })
+          firstToken = false
+        }
+        streamingRef.current += token
+        dispatch({ type: 'TOKEN', token })
       }
-      streamingRef.current += token
-      dispatch({ type: 'TOKEN', token })
-    }
 
-    if (streamGenRef.current === gen) {
-      dispatch({ type: 'STREAM_DONE', fullText: streamingRef.current })
+      if (streamGenRef.current === gen) {
+        dispatch({ type: 'STREAM_DONE', fullText: streamingRef.current })
+      }
+    } catch (err) {
+      console.error('[rocky] LLM error:', err)
+      if (streamGenRef.current === gen) {
+        dispatch({ type: 'STREAM_DONE', fullText: `Error: ${err instanceof Error ? err.message : String(err)}` })
+      }
     }
   }, [state.messages])
 
