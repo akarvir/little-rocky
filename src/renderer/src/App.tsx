@@ -32,6 +32,7 @@ function reducer(state: AppState, action: Action): AppState {
     case 'STREAM_DONE':
       return {
         ...state,
+        rocky: 'responding',
         messages: [...state.messages, { role: 'assistant', content: action.fullText }],
         streaming: '',
       }
