@@ -26,6 +26,10 @@ describe('transition', () => {
     expect(transition('thinking', { type: 'FIRST_TOKEN' })).toBe('responding')
   })
 
+  it('THINKING + DEACTIVATE -> IDLE', () => {
+    expect(transition('thinking', { type: 'DEACTIVATE' })).toBe('idle')
+  })
+
   it('RESPONDING + SUBMIT -> THINKING', () => {
     expect(transition('responding', { type: 'SUBMIT' })).toBe('thinking')
   })

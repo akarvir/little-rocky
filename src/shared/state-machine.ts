@@ -12,6 +12,7 @@ export function transition(state: RockyState, event: RockyEvent): RockyState {
       return state
     case 'thinking':
       if (event.type === 'FIRST_TOKEN') return 'responding'
+      if (event.type === 'DEACTIVATE') return 'idle'
       return state
     case 'responding':
       if (event.type === 'SUBMIT') return 'thinking'
