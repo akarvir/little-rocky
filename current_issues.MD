@@ -1,2 +1,0 @@
-- Currently it is floating. I want it to pace back and forth along the base of the display.
-- I also want to look slightly, pixel animated and blue. 

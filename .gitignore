@@ -6,3 +6,6 @@ out/
 *.log*
 .superpowers/
 .env
+*.md
+*.MD
+docs/
