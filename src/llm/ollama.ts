@@ -18,24 +18,33 @@ export class OllamaAdapter implements LLMAdapter {
       throw new Error(`Ollama error ${res.status}: ${body}`)
     }
 
-    const reader = res.body!.getReader()
+    if (!res.body) throw new Error('Ollama response has no body')
+
+    const reader = res.body.getReader()
     const decoder = new TextDecoder()
     let buf = ''
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buf += decoder.decode(value, { stream: true })
-      const lines = buf.split('\n')
-      buf = lines.pop() ?? ''
-      for (const line of lines) {
-        if (!line.trim()) continue
-        const obj = JSON.parse(line) as { message: { content: string }; done: boolean }
-        if (obj.message?.content) yield obj.message.content
-        if (obj.done) return
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.trim()) continue
+          let obj: { message: { content: string }; done: boolean }
+          try {
+            obj = JSON.parse(line)
+          } catch {
+            throw new Error(`Ollama stream: failed to parse line: ${line}`)
+          }
+          if (obj.message?.content) yield obj.message.content
+          if (obj.done) return
+        }
       }
+    } finally {
+      reader.releaseLock()
     }
-
-    reader.releaseLock()
   }
 }
