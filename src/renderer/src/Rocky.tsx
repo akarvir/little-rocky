@@ -6,124 +6,89 @@ interface Props {
 }
 
 const FRAME_MS = 80
-const WALK_SPEED = 0.8
-const WALK_RANGE = 70
-const CANVAS_W = 220
-const CANVAS_H = 64
+const WALK_SPEED = 0.9
+const WALK_RANGE = 80
+const CANVAS_W = 240
+const CANVAS_H = 80
+const P = 6 // pixels per grid cell
 
-function getColors(state: RockyState) {
-  if (state === 'yelling') {
-    return { body: '#8b3a2a', shadow: '#5a1a0a', highlight: '#c05030', spot: '#e74c3c', leg: '#7a2e1a' }
-  }
-  if (state === 'thinking' || state === 'responding') {
-    return { body: '#7a5c3a', shadow: '#5a3e22', highlight: '#9a7a52', spot: '#a78bfa', leg: '#6b4e30' }
-  }
-  return { body: '#7a5c3a', shadow: '#5a3e22', highlight: '#9a7a52', spot: '#2ecc71', leg: '#6b4e30' }
+// 11×10 pixel-art diamond/cross sprite
+// 0=transparent 1=body(navy) 2=cyan 3=highlight-cyan 4=shadow-cyan
+const SPRITE = [
+  [0,0,0,3,3,3,3,3,0,0,0],
+  [0,0,3,2,1,1,1,2,3,0,0],
+  [0,3,2,1,1,2,1,1,2,3,0],
+  [3,2,1,1,2,2,2,1,1,2,3],
+  [2,1,1,2,2,2,2,2,1,1,2],
+  [2,1,1,2,2,2,2,2,1,1,2],
+  [4,2,1,1,2,2,2,1,1,2,4],
+  [0,4,2,1,1,2,1,1,2,4,0],
+  [0,0,4,2,1,1,1,2,4,0,0],
+  [0,0,0,4,4,4,4,4,0,0,0],
+]
+const SW = SPRITE[0].length  // 11
+const SH = SPRITE.length     // 10
+
+function getPalette(state: RockyState) {
+  if (state === 'yelling') return ['', '#3a0000', '#ef4444', '#ff9090', '#660000']
+  if (state === 'thinking' || state === 'responding') return ['', '#120a3a', '#a78bfa', '#ddd6fe', '#2d1b69']
+  return ['', '#0d1a4a', '#00d4ff', '#b0f0ff', '#004466']
 }
 
-function drawRocky(
+function drawSprite(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
   state: RockyState,
   frame: number,
-  dir: 1 | -1
 ) {
-  const c = getColors(state)
-  const bob = state === 'thinking' ? Math.sin(frame * 0.25) * 3 : 0
-  const y = cy + bob
+  const palette = getPalette(state)
+  const glowColor = palette[2]
 
+  const bob = state === 'thinking'
+    ? Math.sin(frame * 0.3) * 4
+    : state === 'idle'
+    ? Math.sin(frame * 0.15) * 1.5
+    : 0
+
+  const shake = state === 'yelling' ? (frame % 2 === 0 ? 1 : -1) : 0
+
+  const ox = Math.round(cx - (SW * P) / 2) + shake
+  const oy = Math.round(cy - (SH * P) / 2 + bob)
+
+  // Ambient glow beneath sprite
   ctx.save()
-  // Mirror for left-walking direction
-  if (dir === -1) {
-    ctx.translate(cx * 2, 0)
-    ctx.scale(-1, 1)
+  ctx.shadowColor = glowColor
+  ctx.shadowBlur = 16
+  ctx.globalAlpha = 0.25
+  ctx.fillStyle = glowColor
+  ctx.fillRect(ox + P, oy + P, (SW - 2) * P, (SH - 2) * P)
+  ctx.restore()
+
+  // Draw pixel grid
+  for (let row = 0; row < SH; row++) {
+    for (let col = 0; col < SW; col++) {
+      const v = SPRITE[row][col]
+      if (v === 0) continue
+      ctx.fillStyle = palette[v]
+      ctx.fillRect(ox + col * P, oy + row * P, P, P)
+    }
   }
 
-  // Legs — drawn behind body
-  ctx.strokeStyle = c.leg
-  ctx.lineWidth = 3
-  ctx.lineCap = 'round'
-
-  const legPhase = state === 'idle' || state === 'yelling' ? Math.sin(frame * 0.4) * 4 : 0
-
-  // Left side legs
-  ;[
-    [cx - 10, y - 4, cx - 28, y - 12 + legPhase, cx - 38, y],
-    [cx - 12, y, cx - 30, y + legPhase, cx - 38, y + 12],
-    [cx - 10, y + 4, cx - 26, y + 12 - legPhase, cx - 34, y + 20],
-  ].forEach(([x1, y1, x2, y2, x3, y3]) => {
-    ctx.beginPath()
-    ctx.moveTo(x1, y1)
-    ctx.quadraticCurveTo(x2, y2, x3, y3)
-    ctx.stroke()
-  })
-
-  // Right side legs
-  ;[
-    [cx + 10, y - 4, cx + 28, y - 12 - legPhase, cx + 38, y],
-    [cx + 12, y, cx + 30, y - legPhase, cx + 38, y + 12],
-    [cx + 10, y + 4, cx + 26, y + 12 + legPhase, cx + 34, y + 20],
-  ].forEach(([x1, y1, x2, y2, x3, y3]) => {
-    ctx.beginPath()
-    ctx.moveTo(x1, y1)
-    ctx.quadraticCurveTo(x2, y2, x3, y3)
-    ctx.stroke()
-  })
-
-  // Body — ellipse
-  ctx.fillStyle = c.body
-  ctx.beginPath()
-  ctx.ellipse(cx, y, 18, 13, 0, 0, Math.PI * 2)
-  ctx.fill()
-
-  // Shadow texture
-  ctx.fillStyle = c.shadow
-  ctx.globalAlpha = 0.5
-  ctx.beginPath()
-  ctx.ellipse(cx + 5, y + 3, 10, 7, 0.3, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.globalAlpha = 1
-
-  // Highlight
-  ctx.fillStyle = c.highlight
-  ctx.globalAlpha = 0.6
-  ctx.beginPath()
-  ctx.ellipse(cx - 5, y - 4, 7, 5, -0.4, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.globalAlpha = 1
-
-  // Bioluminescent spots
-  ctx.fillStyle = c.spot
-  ctx.globalAlpha = 0.9
-  ctx.beginPath()
-  ctx.arc(cx - 6, y - 3, 3.5, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(cx + 5, y + 2, 2.5, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(cx - 1, y + 6, 2, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.globalAlpha = 1
-
-  // Spot glow
-  ctx.shadowColor = c.spot
-  ctx.shadowBlur = 6
-  ctx.fillStyle = c.spot
-  ctx.globalAlpha = 0.4
-  ctx.beginPath()
-  ctx.arc(cx - 6, y - 3, 3.5, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(cx + 5, y + 2, 2.5, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.beginPath()
-  ctx.arc(cx - 1, y + 6, 2, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.globalAlpha = 1
-  ctx.shadowBlur = 0
-
+  // Pulsing center glow on border pixels
+  const pulse = (Math.sin(frame * 0.2) + 1) / 2
+  ctx.save()
+  ctx.globalAlpha = 0.15 + pulse * 0.2
+  ctx.shadowColor = glowColor
+  ctx.shadowBlur = 8
+  ctx.fillStyle = glowColor
+  for (let row = 0; row < SH; row++) {
+    for (let col = 0; col < SW; col++) {
+      if (SPRITE[row][col] === 2) {
+        ctx.fillRect(ox + col * P, oy + row * P, P, P)
+      }
+    }
+  }
   ctx.restore()
 }
 
@@ -148,11 +113,14 @@ export default function Rocky({ state }: Props) {
 
       if (state === 'idle') {
         xRef.current += WALK_SPEED * dirRef.current
-        if (Math.abs(xRef.current) >= WALK_RANGE) dirRef.current = (dirRef.current * -1) as 1 | -1
+        if (Math.abs(xRef.current) >= WALK_RANGE) {
+          dirRef.current = (dirRef.current * -1) as 1 | -1
+        }
       }
 
       ctx.clearRect(0, 0, CANVAS_W, CANVAS_H)
-      drawRocky(ctx, CANVAS_W / 2 + (state === 'idle' ? xRef.current : 0), CANVAS_H / 2, state, frameRef.current, dirRef.current)
+      const cx = CANVAS_W / 2 + (state === 'idle' ? xRef.current : 0)
+      drawSprite(ctx, cx, CANVAS_H * 0.55, state, frameRef.current)
     }
 
     rafRef.current = requestAnimationFrame(tick)

@@ -4,7 +4,8 @@ import { registerShortcuts, unregisterShortcuts } from './shortcuts'
 import { startWsServer, stopWsServer } from './ws-server'
 
 const WIN_WIDTH = 420
-const DOCK_CLEARANCE = 80 // px above bottom of screen to clear the Dock
+const WIN_HEIGHT_DEFAULT = 84
+const DOCK_CLEARANCE = 68 // macOS dock height
 
 let win: BrowserWindow | null = null
 
@@ -13,9 +14,9 @@ function createWindow() {
 
   win = new BrowserWindow({
     width: WIN_WIDTH,
-    height: 120,
+    height: WIN_HEIGHT_DEFAULT,
     x: Math.floor((size.width - WIN_WIDTH) / 2),
-    y: size.height - DOCK_CLEARANCE - 120,
+    y: size.height - DOCK_CLEARANCE - WIN_HEIGHT_DEFAULT,
     transparent: true,
     frame: false,
     hasShadow: false,
@@ -53,7 +54,7 @@ app.whenReady().then(() => {
   ipcMain.on('resize', (_e, height: number) => {
     if (!win || win.isDestroyed()) return
     const { size } = screen.getPrimaryDisplay()
-    const clampedHeight = Math.min(Math.max(120, height), size.height - DOCK_CLEARANCE)
+    const clampedHeight = Math.min(Math.max(WIN_HEIGHT_DEFAULT, height), size.height - DOCK_CLEARANCE)
     win.setBounds({
       width: WIN_WIDTH,
       height: clampedHeight,
