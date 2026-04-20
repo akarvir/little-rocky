@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const MESSAGES = [
   'THIS IS NOT THE WAY',
@@ -26,15 +26,19 @@ interface Props {
 export default function Alert({ active, onDismiss }: Props) {
   const [currentMessage, setCurrentMessage] = useState(() => MESSAGES[Math.floor(Math.random() * MESSAGES.length)])
 
-  const onDismissRef = useRef(onDismiss)
-  useEffect(() => { onDismissRef.current = onDismiss })
-
   useEffect(() => {
     if (!active) return
     setCurrentMessage(MESSAGES[Math.floor(Math.random() * MESSAGES.length)])
 
-    const timer = setTimeout(() => onDismissRef.current(), 10_000)
-    return () => clearTimeout(timer)
+    const interval = setInterval(() => {
+      setCurrentMessage(prev => {
+        let next: string
+        do { next = MESSAGES[Math.floor(Math.random() * MESSAGES.length)] } while (next === prev)
+        return next
+      })
+    }, 3000)
+
+    return () => clearInterval(interval)
   }, [active])
 
   if (!active) return null

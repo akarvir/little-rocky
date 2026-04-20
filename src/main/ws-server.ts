@@ -36,6 +36,11 @@ export function startWsServer(win: BrowserWindow) {
         lastYellAt = now
         if (!win.isDestroyed()) win.webContents.send('distraction')
       }
+
+      if (msg.type === 'distraction_end') {
+        lastYellAt = 0
+        if (!win.isDestroyed()) win.webContents.send('distraction_end')
+      }
     })
   })
 

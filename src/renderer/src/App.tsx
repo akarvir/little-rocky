@@ -73,6 +73,9 @@ export default function App() {
     const offDistraction = window.rocky.onDistraction(() => {
       dispatch({ type: 'EVENT', event: { type: 'DISTRACTION' } })
     })
+    const offDistractionEnd = window.rocky.onDistractionEnd(() => {
+      dispatch({ type: 'EVENT', event: { type: 'YELL_END' } })
+    })
 
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -85,6 +88,7 @@ export default function App() {
     return () => {
       offActivate()
       offDistraction()
+      offDistractionEnd()
       window.removeEventListener('keydown', handleEsc)
     }
   }, [])

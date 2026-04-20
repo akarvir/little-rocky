@@ -16,6 +16,11 @@ contextBridge.exposeInMainWorld('rocky', {
     ipcRenderer.on('distraction', listener)
     return () => ipcRenderer.removeListener('distraction', listener)
   },
+  onDistractionEnd: (cb: () => void) => {
+    const listener = () => cb()
+    ipcRenderer.on('distraction_end', listener)
+    return () => ipcRenderer.removeListener('distraction_end', listener)
+  },
   setInteractive: (value: boolean) => ipcRenderer.send('set-interactive', value),
   resize: (height: number) => ipcRenderer.send('resize', height),
 })
