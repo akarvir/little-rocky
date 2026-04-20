@@ -13,6 +13,9 @@ function isBlocked(url) {
   }
 }
 
+// MV3 service workers terminate after ~30s of inactivity. setTimeout does not
+// keep the worker alive, so reconnect relies on the next tab event restarting
+// the worker and calling connect() again from module scope.
 function connect() {
   try {
     ws = new WebSocket(WS_URL)
@@ -47,7 +50,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 chrome.tabs.onActivated.addListener(({ tabId }) => {
   chrome.tabs.get(tabId, (tab) => {
-    if (tab.url && isBlocked(tab.url)) notify(tab.url)
+    if (!tab || !tab.url) return
+    if (isBlocked(tab.url)) notify(tab.url)
   })
 })
 
