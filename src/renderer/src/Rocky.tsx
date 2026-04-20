@@ -115,6 +115,12 @@ function drawRocky(
   ctx.beginPath()
   ctx.arc(cx - 6, y - 3, 3.5, 0, Math.PI * 2)
   ctx.fill()
+  ctx.beginPath()
+  ctx.arc(cx + 5, y + 2, 2.5, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(cx - 1, y + 6, 2, 0, Math.PI * 2)
+  ctx.fill()
   ctx.globalAlpha = 1
   ctx.shadowBlur = 0
 
@@ -142,7 +148,7 @@ export default function Rocky({ state }: Props) {
 
       if (state === 'idle') {
         xRef.current += WALK_SPEED * dirRef.current
-        if (Math.abs(xRef.current) >= WALK_RANGE) dirRef.current *= -1 as 1 | -1
+        if (Math.abs(xRef.current) >= WALK_RANGE) dirRef.current = (dirRef.current * -1) as 1 | -1
       }
 
       ctx.clearRect(0, 0, CANVAS_W, CANVAS_H)
