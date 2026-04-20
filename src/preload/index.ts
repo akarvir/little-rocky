@@ -1,22 +1,18 @@
-import { contextBridge } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron'
 
-// Custom APIs for renderer
-const api = {}
-
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  // @ts-ignore (define in dts)
-  window.electron = electronAPI
-  // @ts-ignore (define in dts)
-  window.api = api
-}
+contextBridge.exposeInMainWorld('rocky', {
+  onActivate: (cb: () => void) => {
+    ipcRenderer.on('activate', cb)
+    return () => ipcRenderer.removeListener('activate', cb)
+  },
+  onDeactivate: (cb: () => void) => {
+    ipcRenderer.on('deactivate', cb)
+    return () => ipcRenderer.removeListener('deactivate', cb)
+  },
+  onDistraction: (cb: () => void) => {
+    ipcRenderer.on('distraction', cb)
+    return () => ipcRenderer.removeListener('distraction', cb)
+  },
+  setInteractive: (value: boolean) => ipcRenderer.send('set-interactive', value),
+  resize: (height: number) => ipcRenderer.send('resize', height),
+})
