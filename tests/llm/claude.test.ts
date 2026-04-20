@@ -1,31 +1,27 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@anthropic-ai/sdk', () => {
-  return {
-    default: vi.fn(function (this: any, config: any) {
-      this.messages = {
-        stream: vi.fn(),
-      }
-    }),
-  }
-})
+vi.mock('@anthropic-ai/sdk', () => ({
+  default: vi.fn().mockImplementation(() => ({
+    messages: {
+      stream: vi.fn(),
+    },
+  })),
+}))
 
 describe('ClaudeAdapter', () => {
   beforeEach(() => {
+    vi.resetModules()
     vi.clearAllMocks()
   })
 
-  afterEach(() => {
-    vi.resetModules()
-  })
-
   it('streams text_delta tokens', async () => {
-    async function* fakeStream() {
+    async function* fakeStreamGen() {
       yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'Carbon' } }
       yield { type: 'content_block_delta', delta: { type: 'text_delta', text: ' has 4' } }
       yield { type: 'content_block_delta', delta: { type: 'text_delta', text: ' valence electrons.' } }
       yield { type: 'message_stop' }
     }
+    const fakeStream = () => Object.assign(fakeStreamGen(), { abort: vi.fn() })
 
     const Anthropic = (await import('@anthropic-ai/sdk')).default as any
     Anthropic.mockImplementation(function (this: any) {
@@ -46,12 +42,13 @@ describe('ClaudeAdapter', () => {
   })
 
   it('skips non-text_delta events', async () => {
-    async function* fakeStream() {
+    async function* fakeStreamGen() {
       yield { type: 'message_start', message: {} }
       yield { type: 'content_block_start', index: 0 }
       yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'Hello' } }
       yield { type: 'message_stop' }
     }
+    const fakeStream = () => Object.assign(fakeStreamGen(), { abort: vi.fn() })
 
     const Anthropic = (await import('@anthropic-ai/sdk')).default as any
     Anthropic.mockImplementation(function (this: any) {

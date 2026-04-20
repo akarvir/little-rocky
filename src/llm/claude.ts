@@ -6,7 +6,8 @@ export class ClaudeAdapter implements LLMAdapter {
 
   constructor(
     private model: string,
-    apiKey: string
+    apiKey: string,
+    private maxTokens = 2048
   ) {
     this.client = new Anthropic({ apiKey })
   }
@@ -14,17 +15,21 @@ export class ClaudeAdapter implements LLMAdapter {
   async *stream(messages: Message[]): AsyncGenerator<string> {
     const streamIter = this.client.messages.stream({
       model: this.model,
-      max_tokens: 2048,
-      messages: messages.map(m => ({ role: m.role, content: m.content })),
+      max_tokens: this.maxTokens,
+      messages,
     })
 
-    for await (const event of streamIter) {
-      if (
-        event.type === 'content_block_delta' &&
-        event.delta.type === 'text_delta'
-      ) {
-        yield event.delta.text
+    try {
+      for await (const event of streamIter) {
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
+          yield event.delta.text
+        }
       }
+    } finally {
+      streamIter.abort()
     }
   }
 }
