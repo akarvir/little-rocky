@@ -35,36 +35,39 @@ function createWindow() {
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
   if (process.env.NODE_ENV === 'development') {
-    win.loadURL(process.env['ELECTRON_RENDERER_URL']!)
+    const devUrl = process.env['ELECTRON_RENDERER_URL']
+    if (!devUrl) throw new Error('ELECTRON_RENDERER_URL is not set in development mode')
+    win.loadURL(devUrl)
   } else {
     win.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
-  // Resize window when renderer content changes height
-  ipcMain.on('resize', (_e, height: number) => {
-    if (!win) return
-    const { size } = screen.getPrimaryDisplay()
-    win.setBounds({
-      width: WIN_WIDTH,
-      height: Math.max(120, height),
-      x: Math.floor((size.width - WIN_WIDTH) / 2),
-      y: size.height - DOCK_CLEARANCE - Math.max(120, height),
-    })
-  })
-
-  // Toggle click-through
-  ipcMain.on('set-interactive', (_e, value: boolean) => {
-    if (!win) return
-    win.setIgnoreMouseEvents(!value, { forward: true })
-    if (value) win.setFocusable(true)
-    else win.setFocusable(false)
-  })
 }
 
 app.whenReady().then(() => {
   createWindow()
   registerShortcuts(win!)
   startWsServer(win!)
+
+  // Resize window when renderer content changes height
+  ipcMain.on('resize', (_e, height: number) => {
+    if (!win || win.isDestroyed()) return
+    const { size } = screen.getPrimaryDisplay()
+    const clampedHeight = Math.min(Math.max(120, height), size.height - DOCK_CLEARANCE)
+    win.setBounds({
+      width: WIN_WIDTH,
+      height: clampedHeight,
+      x: Math.floor((size.width - WIN_WIDTH) / 2),
+      y: size.height - DOCK_CLEARANCE - clampedHeight,
+    })
+  })
+
+  // Toggle click-through
+  ipcMain.on('set-interactive', (_e, value: boolean) => {
+    if (!win || win.isDestroyed()) return
+    win.setIgnoreMouseEvents(!value, { forward: true })
+    win.setFocusable(value)
+  })
 })
 
 app.on('will-quit', () => {

@@ -2,16 +2,19 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('rocky', {
   onActivate: (cb: () => void) => {
-    ipcRenderer.on('activate', cb)
-    return () => ipcRenderer.removeListener('activate', cb)
+    const listener = () => cb()
+    ipcRenderer.on('activate', listener)
+    return () => ipcRenderer.removeListener('activate', listener)
   },
   onDeactivate: (cb: () => void) => {
-    ipcRenderer.on('deactivate', cb)
-    return () => ipcRenderer.removeListener('deactivate', cb)
+    const listener = () => cb()
+    ipcRenderer.on('deactivate', listener)
+    return () => ipcRenderer.removeListener('deactivate', listener)
   },
   onDistraction: (cb: () => void) => {
-    ipcRenderer.on('distraction', cb)
-    return () => ipcRenderer.removeListener('distraction', cb)
+    const listener = () => cb()
+    ipcRenderer.on('distraction', listener)
+    return () => ipcRenderer.removeListener('distraction', listener)
   },
   setInteractive: (value: boolean) => ipcRenderer.send('set-interactive', value),
   resize: (height: number) => ipcRenderer.send('resize', height),
