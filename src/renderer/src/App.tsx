@@ -1,3 +1,9 @@
+import Rocky from './Rocky'
+
 export default function App() {
-  return null
+  return (
+    <div style={{ background: 'transparent' }}>
+      <Rocky state="idle" />
+    </div>
+  )
 }
