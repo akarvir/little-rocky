@@ -18,6 +18,7 @@ function isBlocked(url: string): boolean {
 }
 
 export function startWsServer(win: BrowserWindow) {
+  if (wss) return
   wss = new WebSocketServer({ port: PORT, host: '127.0.0.1' })
 
   wss.on('connection', (ws: WebSocket) => {
@@ -33,7 +34,7 @@ export function startWsServer(win: BrowserWindow) {
         const now = Date.now()
         if (now - lastYellAt < YELL_COOLDOWN_MS) return
         lastYellAt = now
-        win.webContents.send('distraction')
+        if (!win.isDestroyed()) win.webContents.send('distraction')
       }
     })
   })
@@ -47,4 +48,5 @@ export function startWsServer(win: BrowserWindow) {
 
 export function stopWsServer() {
   wss?.close()
+  wss = null
 }
