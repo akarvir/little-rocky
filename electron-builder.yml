@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: ylittle-rocky
+productName: little-rocky
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: ylittle-rocky
+  executableName: little-rocky
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
