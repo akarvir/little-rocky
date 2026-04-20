@@ -8,4 +8,5 @@ out/
 .env
 *.md
 *.MD
+!README.md
 docs/
