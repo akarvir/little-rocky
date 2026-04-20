@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 interface RockyBridge {
   onActivate: (cb: () => void) => () => void
   onDeactivate: (cb: () => void) => () => void
