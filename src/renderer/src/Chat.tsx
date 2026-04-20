@@ -39,7 +39,7 @@ export default function Chat({ messages, streamingToken, isThinking, onSubmit }:
           {pair.assistant !== undefined && (
             <div className="msg-box msg-assistant">{pair.assistant}</div>
           )}
-          {idx === pairs.length - 1 && !pair.assistant && streamingToken && (
+          {idx === pairs.length - 1 && pair.assistant === undefined && streamingToken && (
             <div className="msg-box msg-assistant">{streamingToken}<span className="cursor">|</span></div>
           )}
         </div>
