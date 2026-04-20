@@ -1,0 +1,5 @@
+- An AI agent that is powered by an LLM (LLM interface must be agnostic, could be Claude powered) and looks like Rocky from project hail Mary and lives on my computer's dock, treading back and forth.
+- Ideally it should be powered by free, local model like Ollama.
+- It keeps walking back and forth until certain keybind activate it, a small text prompt above it where one fills the prompt in and it stops walking. 
+- Once we hit enter or submit, a thought bubble should rise above its head showing it pondering. The prompt box becomes of variable length and it should stream the answer under the question. A new textbox should be below this variable length textbox for the next question.
+- When i go onto twitter, youtube, instagram through the browser, without keybind activation, it should realise i am on it  and yell at me telling me i am doing the wrong thing, that this is not the way, to snap out of it etc. Should not need keybind activation. 
