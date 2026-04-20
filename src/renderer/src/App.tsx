@@ -49,6 +49,7 @@ export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState)
   const rootRef = useRef<HTMLDivElement>(null)
   const streamingRef = useRef('')
+  const streamGenRef = useRef(0)
 
   // Resize window to match content height
   useEffect(() => {
@@ -74,6 +75,7 @@ export default function App() {
 
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        streamGenRef.current++
         dispatch({ type: 'EVENT', event: { type: 'DEACTIVATE' } })
       }
     }
@@ -99,9 +101,11 @@ export default function App() {
     ]
 
     streamingRef.current = ''
+    const gen = ++streamGenRef.current
     let firstToken = true
 
     for await (const token of adapter.stream(newMessages)) {
+      if (streamGenRef.current !== gen) break
       if (firstToken) {
         dispatch({ type: 'EVENT', event: { type: 'FIRST_TOKEN' } })
         firstToken = false
@@ -110,7 +114,9 @@ export default function App() {
       dispatch({ type: 'TOKEN', token })
     }
 
-    dispatch({ type: 'STREAM_DONE', fullText: streamingRef.current })
+    if (streamGenRef.current === gen) {
+      dispatch({ type: 'STREAM_DONE', fullText: streamingRef.current })
+    }
   }, [state.messages])
 
   const handleYellDismiss = useCallback(() => {
