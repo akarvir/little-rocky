@@ -144,6 +144,16 @@ Rocky has five states. Only one is active at a time.
   - "FOCUS. THIS IS NOT IT."
   - "DO NOT LINGER HERE."
   - "RETURN TO THE WORK."
+  - "YOU KNOW BETTER THAN THIS."
+  - "CLOSE THE TAB. NOW."
+  - "THIS SERVES NOTHING."
+  - "THE WORK AWAITS. GO."
+  - "I SEE YOU. STOP."
+  - "NOT NOW. NOT THIS."
+  - "YOU WERE DOING SO WELL."
+  - "THIS IS A TRAP. LEAVE."
+  - "WHAT ARE YOU DOING?"
+  - "EYES FORWARD. MOVE."
 - Duration: **10 seconds**, then auto-dismisses
 - Can be dismissed early by clicking the alert box
 - Cooldown: 60 seconds before the extension can trigger YELLING again
